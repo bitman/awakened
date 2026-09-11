@@ -1,8 +1,24 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { site } from '@/content/site'
-import { posts } from '@/content/posts'
-import { formatDate } from '@/lib/dates'
+import { listPosts, type Post } from '@/lib/posts'
+import { formatDate, isMissingTable } from '@/lib/dates'
 import TopicList from '@/components/TopicList.vue'
+
+const posts = ref<Post[]>([])
+const notice = ref('')
+
+onMounted(async () => {
+  try {
+    posts.value = (await listPosts()).slice(0, 5)
+  } catch (error) {
+    notice.value = isMissingTable(error as { message?: string })
+      ? 'Tables are not created yet. Run supabase/schema.sql in the Supabase SQL editor.'
+      : error instanceof Error
+        ? error.message
+        : 'Could not load posts.'
+  }
+})
 </script>
 
 <template>
@@ -17,7 +33,9 @@ import TopicList from '@/components/TopicList.vue'
 
     <section>
       <h2 class="section">Latest posts</h2>
-      <article v-for="post in posts" :key="post.slug" class="card">
+      <p v-if="notice" class="empty">{{ notice }}</p>
+      <p v-else-if="posts.length === 0" class="muted">No posts yet.</p>
+      <article v-for="post in posts" :key="post.id" class="card">
         <p class="meta">{{ formatDate(post.date) }}</p>
         <h2>
           <RouterLink :to="`/posts/${post.slug}`">{{ post.title }}</RouterLink>

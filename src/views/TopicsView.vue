@@ -1,16 +1,28 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { topics, type TopicSlug } from '@/content/site'
-import { posts, postsByTopic } from '@/content/posts'
+import { listPosts, type Post } from '@/lib/posts'
 import { links, linksByTopic } from '@/content/links'
 import { formatDate } from '@/lib/dates'
 
 const route = useRoute()
+const posts = ref<Post[]>([])
+
 const current = computed(() => topics.find((topic) => topic.slug === route.params.slug))
 const slug = computed(() => current.value?.slug as TopicSlug | undefined)
-const topicPosts = computed(() => (slug.value ? postsByTopic(slug.value) : posts))
+const topicPosts = computed(() =>
+  slug.value ? posts.value.filter((post) => post.topics.includes(slug.value as TopicSlug)) : posts.value,
+)
 const topicLinks = computed(() => (slug.value ? linksByTopic(slug.value) : links))
+
+onMounted(async () => {
+  try {
+    posts.value = await listPosts()
+  } catch {
+    posts.value = []
+  }
+})
 </script>
 
 <template>
@@ -32,7 +44,7 @@ const topicLinks = computed(() => (slug.value ? linksByTopic(slug.value) : links
 
     <h2 class="section">Posts</h2>
     <p v-if="topicPosts.length === 0" class="empty">No posts in this topic yet.</p>
-    <article v-for="post in topicPosts" :key="post.slug" class="card">
+    <article v-for="post in topicPosts" :key="post.id" class="card">
       <p class="meta">{{ formatDate(post.date) }}</p>
       <h2>
         <RouterLink :to="`/posts/${post.slug}`">{{ post.title }}</RouterLink>

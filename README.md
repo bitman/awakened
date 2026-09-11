@@ -32,6 +32,7 @@ The Vue app uses the **anon** key. It never uses the `postgres://…` database U
 3. Add the same `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` on the Vercel project (Environment Variables), then redeploy.
 4. **Authentication → Users → Add user** for each member. There is no public sign-up form.
 5. Under **Authentication → Providers → Email**, you can turn off “Confirm email” while you are setting up, or add users already confirmed.
+6. Create the tables: SQL Editor → paste `supabase/schema.sql` → Run. That adds `posts` and `group_posts`, member-only RLS, and the two old articles.
 
 Do not copy keys from WeCanGo.
 

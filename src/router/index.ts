@@ -11,6 +11,7 @@ const router = createRouter({
     { path: '/', name: 'home', component: HomeView },
     { path: '/about', name: 'about', component: () => import('../views/AboutView.vue') },
     { path: '/posts', name: 'posts', component: () => import('../views/PostsView.vue') },
+    { path: '/posts/new', name: 'new-post', component: () => import('../views/NewPostView.vue') },
     { path: '/posts/:slug', name: 'post', component: () => import('../views/PostView.vue') },
     { path: '/group', name: 'group', component: () => import('../views/GroupView.vue') },
     { path: '/links', name: 'links', component: () => import('../views/LinksView.vue') },
