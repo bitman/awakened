@@ -34,6 +34,7 @@ The Vue app uses the **anon** key. It never uses the `postgres://…` database U
 5. Under **Authentication → Providers → Email**, you can turn off “Confirm email” while you are setting up, or add users already confirmed.
 6. Create the tables: SQL Editor → paste `supabase/schema.sql` → Run. That adds `posts` and `group_posts`, member-only RLS, and the two old articles.
 7. Roles: paste `supabase/roles.sql` → Run. Then run the `update … role = 'admin'` at the bottom with your sign-in email. New users default to member. Admins can delete posts and group items.
+8. WhatsApp ingest: paste `supabase/whatsapp.sql` → Run. On Vercel add **Secret** env vars (no `VITE_` prefix): `SUPABASE_SERVICE_ROLE_KEY` (service_role key), `WHATSAPP_INGEST_SECRET` (a long random string), `WHATSAPP_VERIFY_TOKEN` (for Meta later). Redeploy. POST JSON to `/api/whatsapp` with `Authorization: Bearer <WHATSAPP_INGEST_SECRET>`.
 
 Do not copy keys from WeCanGo.
 

@@ -7,6 +7,17 @@ export function formatDate(iso: string) {
   }).format(date)
 }
 
+export function formatDateTime(iso: string) {
+  const date = iso.includes('T') ? new Date(iso) : new Date(`${iso}T00:00:00`)
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
 export function paragraphs(body: string) {
   return body
     .split(/\n\s*\n/)

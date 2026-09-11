@@ -4,18 +4,22 @@ export interface GroupPost {
   id: string
   body: string
   date: string
+  author?: string
+  source?: string
 }
 
 interface GroupRow {
   id: string
   body: string
   posted_at: string
+  author_name: string | null
+  source: string | null
 }
 
 export async function listGroupPosts() {
   const { data, error } = await supabase
     .from('group_posts')
-    .select('id, body, posted_at')
+    .select('id, body, posted_at, author_name, source')
     .order('posted_at', { ascending: false })
 
   if (error) throw error
@@ -23,6 +27,8 @@ export async function listGroupPosts() {
     id: row.id,
     body: row.body,
     date: row.posted_at,
+    author: row.author_name ?? undefined,
+    source: row.source ?? undefined,
   }))
 }
 

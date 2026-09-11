@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { createGroupPost, deleteGroupPost, listGroupPosts, type GroupPost } from '@/lib/groupPosts'
-import { formatDate, isMissingTable } from '@/lib/dates'
+import { formatDateTime, isMissingTable } from '@/lib/dates'
 import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
@@ -58,7 +58,7 @@ onMounted(load)
     <p class="lede">WhatsApp</p>
     <h1>Group</h1>
     <p class="note">
-      A curated feed from the WhatsApp group — not the whole chat, only what someone chooses to put on the site.
+      Messages from the WhatsApp group land here. For now we show everything; later we can pick which ones stay.
     </p>
 
     <form class="compose" @submit.prevent="onSubmit">
@@ -75,7 +75,10 @@ onMounted(load)
 
     <article v-for="item in items" :key="item.id" class="card">
       <p class="meta">
-        {{ formatDate(item.date) }}
+        <span>
+          {{ formatDateTime(item.date) }}
+          <template v-if="item.author"> · {{ item.author }}</template>
+        </span>
         <button v-if="session.isAdmin" class="remove" type="button" @click="onRemove(item.id)">Remove</button>
       </p>
       <p>{{ item.body }}</p>
