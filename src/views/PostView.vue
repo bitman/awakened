@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { getPostBySlug, type Post } from '@/lib/posts'
+import { useRoute, useRouter } from 'vue-router'
+import { deletePost, getPostBySlug, type Post } from '@/lib/posts'
 import { formatDate, paragraphs, isMissingTable } from '@/lib/dates'
+import { useSessionStore } from '@/stores/session'
 import TopicList from '@/components/TopicList.vue'
 
 const route = useRoute()
+const router = useRouter()
+const session = useSessionStore()
 const post = ref<Post | null>(null)
 const notice = ref('')
 const loading = ref(true)
@@ -28,6 +31,17 @@ async function load() {
   }
 }
 
+async function onDelete() {
+  if (!post.value) return
+  if (!confirm(`Delete “${post.value.title}”?`)) return
+  try {
+    await deletePost(post.value.id)
+    await router.push('/posts')
+  } catch (error) {
+    notice.value = error instanceof Error ? error.message : 'Could not delete.'
+  }
+}
+
 onMounted(load)
 watch(() => route.params.slug, load)
 </script>
@@ -41,6 +55,9 @@ watch(() => route.params.slug, load)
         · {{ formatDate(post.date) }}
       </p>
       <h1>{{ post.title }}</h1>
+      <p v-if="session.isAdmin" class="meta">
+        <button class="remove" type="button" @click="onDelete">Delete</button>
+      </p>
       <TopicList :slugs="post.topics" />
       <div class="prose">
         <p v-for="(paragraph, index) in paragraphs(post.body)" :key="index">{{ paragraph }}</p>

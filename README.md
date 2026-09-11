@@ -33,6 +33,7 @@ The Vue app uses the **anon** key. It never uses the `postgres://…` database U
 4. **Authentication → Users → Add user** for each member. There is no public sign-up form.
 5. Under **Authentication → Providers → Email**, you can turn off “Confirm email” while you are setting up, or add users already confirmed.
 6. Create the tables: SQL Editor → paste `supabase/schema.sql` → Run. That adds `posts` and `group_posts`, member-only RLS, and the two old articles.
+7. Roles: paste `supabase/roles.sql` → Run. Then run the `update … role = 'admin'` at the bottom with your sign-in email. New users default to member. Admins can delete posts and group items.
 
 Do not copy keys from WeCanGo.
 

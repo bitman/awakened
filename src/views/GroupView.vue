@@ -2,6 +2,9 @@
 import { onMounted, ref } from 'vue'
 import { createGroupPost, deleteGroupPost, listGroupPosts, type GroupPost } from '@/lib/groupPosts'
 import { formatDate, isMissingTable } from '@/lib/dates'
+import { useSessionStore } from '@/stores/session'
+
+const session = useSessionStore()
 
 const items = ref<GroupPost[]>([])
 const body = ref('')
@@ -73,7 +76,7 @@ onMounted(load)
     <article v-for="item in items" :key="item.id" class="card">
       <p class="meta">
         {{ formatDate(item.date) }}
-        <button class="remove" type="button" @click="onRemove(item.id)">Remove</button>
+        <button v-if="session.isAdmin" class="remove" type="button" @click="onRemove(item.id)">Remove</button>
       </p>
       <p>{{ item.body }}</p>
     </article>
@@ -89,20 +92,6 @@ onMounted(load)
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-}
-
-.remove {
-  background: none;
-  border: 0;
-  padding: 0;
-  color: var(--muted);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.8rem;
-}
-
-.remove:hover {
-  color: var(--text);
 }
 
 .btn:disabled {

@@ -16,6 +16,13 @@ vi.mock('@/lib/supabase', () => ({
       signInWithPassword: vi.fn<() => Promise<void>>(),
       signOut: vi.fn<() => Promise<void>>(),
     },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () => Promise.resolve({ data: null }),
+        }),
+      }),
+    }),
   },
 }))
 

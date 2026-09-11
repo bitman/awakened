@@ -83,3 +83,8 @@ export async function createPost(input: {
   }
   throw new Error('Could not create a unique slug.')
 }
+
+export async function deletePost(id: string) {
+  const { error } = await supabase.from('posts').delete().eq('id', id)
+  if (error) throw error
+}

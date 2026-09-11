@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { site } from '@/content/site'
-import { listPosts, type Post } from '@/lib/posts'
+import { deletePost, listPosts, type Post } from '@/lib/posts'
 import { formatDate, isMissingTable } from '@/lib/dates'
+import { useSessionStore } from '@/stores/session'
 import TopicList from '@/components/TopicList.vue'
 
+const session = useSessionStore()
 const posts = ref<Post[]>([])
 const notice = ref('')
 const loading = ref(true)
@@ -22,6 +24,16 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+async function onDelete(post: Post) {
+  if (!confirm(`Delete “${post.title}”?`)) return
+  try {
+    await deletePost(post.id)
+    posts.value = posts.value.filter((item) => item.id !== post.id)
+  } catch (error) {
+    notice.value = error instanceof Error ? error.message : 'Could not delete.'
+  }
+}
 </script>
 
 <template>
@@ -36,7 +48,10 @@ onMounted(async () => {
     <p v-else-if="notice" class="empty">{{ notice }}</p>
     <p v-else-if="posts.length === 0" class="empty">No posts yet. Write the first one.</p>
     <article v-for="post in posts" :key="post.id" class="card">
-      <p class="meta">{{ formatDate(post.date) }}</p>
+      <p class="meta">
+        {{ formatDate(post.date) }}
+        <button v-if="session.isAdmin" class="remove" type="button" @click="onDelete(post)">Delete</button>
+      </p>
       <h2>
         <RouterLink :to="`/posts/${post.slug}`">{{ post.title }}</RouterLink>
       </h2>
@@ -57,5 +72,11 @@ onMounted(async () => {
 
 .heading h1 {
   margin: 0;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
 }
 </style>
