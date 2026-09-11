@@ -2,12 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 
-const getSession = vi.fn<() => Promise<{ data: { session: null } }>>()
+const { getSession } = vi.hoisted(() => ({
+  getSession: vi.fn<() => Promise<{ data: { session: null } }>>(),
+}))
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
-      getSession: (...args: unknown[]) => getSession(...args),
+      getSession,
       onAuthStateChange: () => ({
         data: { subscription: { unsubscribe() {} } },
       }),
