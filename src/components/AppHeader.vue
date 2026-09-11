@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { site } from '@/content/site'
+import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
+const router = useRouter()
+const session = useSessionStore()
 
 const links = [
   { to: '/', label: 'Home' },
@@ -12,13 +15,18 @@ const links = [
   { to: '/links', label: 'Links' },
   { to: '/topics', label: 'Topics' },
 ]
+
+async function onSignOut() {
+  await session.signOut()
+  await router.push({ name: 'sign-in' })
+}
 </script>
 
 <template>
   <header class="header">
     <div class="bar">
       <RouterLink class="brand" to="/">{{ site.name }}</RouterLink>
-      <nav class="nav" aria-label="Primary">
+      <nav v-if="session.isSignedIn" class="nav" aria-label="Primary">
         <RouterLink
           v-for="link in links"
           :key="link.to"
@@ -29,7 +37,8 @@ const links = [
           {{ link.label }}
         </RouterLink>
       </nav>
-      <RouterLink class="signin" to="/sign-in">Sign in</RouterLink>
+      <button v-if="session.isSignedIn" class="signin" type="button" @click="onSignOut">Sign out</button>
+      <RouterLink v-else class="signin" to="/sign-in">Sign in</RouterLink>
     </div>
   </header>
 </template>
@@ -83,6 +92,10 @@ const links = [
   font-size: 0.9rem;
   font-weight: 550;
   text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
 }
 
 .signin:hover {

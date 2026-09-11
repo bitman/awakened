@@ -2,9 +2,9 @@
 
 Members’ site for The Awakened. Vue 3, to be hosted on Vercel with a **separate** Supabase organisation from WeCanGo.
 
-Tabs for now: Home, About, Posts (long-form), Group (curated WhatsApp), Links, Topics. Sign-in is on the page but not wired.
+Tabs: Home, About, Posts (long-form), Group (curated WhatsApp), Links, Topics. Pages other than sign-in require a Supabase email/password session.
 
-Old Statamic copy, topics, links, and images were imported. Auth, posting, and WhatsApp curation come later.
+Old Statamic copy, topics, links, and images were imported. Publishing posts and WhatsApp curation come later.
 
 This repo is **not** WeCanGo. Keep accounts, env files, and CLI links separate so work here cannot pause or bill the other site.
 
@@ -22,6 +22,18 @@ npm run build      # type-check + production build
 npm run test:unit
 npm run lint
 ```
+
+### Supabase keys (this project only)
+
+The Vue app uses the **anon** key. It never uses the `postgres://…` database URL or the `service_role` key.
+
+1. Copy `.env.example` to `.env.local`.
+2. In the **the-awakened** Supabase project (not WeCanGo): **Settings → API**. Paste the `anon` `public` key into `VITE_SUPABASE_ANON_KEY`.
+3. Add the same `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` on the Vercel project (Environment Variables), then redeploy.
+4. **Authentication → Users → Add user** for each member. There is no public sign-up form.
+5. Under **Authentication → Providers → Email**, you can turn off “Confirm email” while you are setting up, or add users already confirmed.
+
+Do not copy keys from WeCanGo.
 
 ## Keep this project isolated from WeCanGo
 

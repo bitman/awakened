@@ -1,22 +1,42 @@
-import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia } from 'pinia'
+
+const getSession = vi.fn<() => Promise<{ data: { session: null } }>>()
+
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: (...args: unknown[]) => getSession(...args),
+      onAuthStateChange: () => ({
+        data: { subscription: { unsubscribe() {} } },
+      }),
+      signInWithPassword: vi.fn<() => Promise<void>>(),
+      signOut: vi.fn<() => Promise<void>>(),
+    },
+  },
+}))
+
 import App from '../App.vue'
 import router from '../router'
 
 describe('App', () => {
-  it('renders the site name and primary tabs', async () => {
-    await router.push('/')
-    await router.isReady()
+  beforeEach(() => {
+    getSession.mockReset()
+    getSession.mockResolvedValue({ data: { session: null } })
+  })
 
+  it('sends visitors to sign-in when there is no session', async () => {
     const wrapper = mount(App, {
-      global: { plugins: [router, createPinia()] },
+      global: { plugins: [createPinia(), router] },
     })
 
+    await router.push('/')
+    await router.isReady()
+    await flushPromises()
+
     expect(wrapper.text()).toContain('The Awakened')
-    expect(wrapper.text()).toContain('Awake to our environment')
-    for (const tab of ['Home', 'About', 'Posts', 'Group', 'Links', 'Topics']) {
-      expect(wrapper.text()).toContain(tab)
-    }
+    expect(wrapper.text()).toContain('Sign in')
+    expect(wrapper.text()).not.toContain('Awake to our environment')
   })
 })

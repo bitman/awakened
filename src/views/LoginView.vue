@@ -1,13 +1,29 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useSessionStore } from '@/stores/session'
+
+const route = useRoute()
+const router = useRouter()
+const session = useSessionStore()
 
 const email = ref('')
 const password = ref('')
 const notice = ref('')
+const pending = ref(false)
 
-function onSubmit() {
-  notice.value =
-    'Sign-in is not wired yet. Next step is a separate Supabase organisation and password accounts for members.'
+async function onSubmit() {
+  notice.value = ''
+  pending.value = true
+  try {
+    await session.signIn(email.value, password.value)
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
+    await router.replace(redirect)
+  } catch (error) {
+    notice.value = error instanceof Error ? error.message : 'Could not sign in.'
+  } finally {
+    pending.value = false
+  }
 }
 </script>
 
@@ -15,7 +31,7 @@ function onSubmit() {
   <div class="page">
     <p class="lede">Members</p>
     <h1>Sign in</h1>
-    <p class="muted">This site will be for the group only. Accounts come after we stand up Supabase on its own org.</p>
+    <p class="muted">This site is for the group. Ask an admin if you need an account.</p>
 
     <form class="form" @submit.prevent="onSubmit">
       <div class="field">
@@ -26,7 +42,7 @@ function onSubmit() {
         <label for="password">Password</label>
         <input id="password" v-model="password" type="password" autocomplete="current-password" required />
       </div>
-      <button class="btn" type="submit">Sign in</button>
+      <button class="btn" type="submit" :disabled="pending">{{ pending ? 'Signing in…' : 'Sign in' }}</button>
       <p v-if="notice" class="note">{{ notice }}</p>
     </form>
   </div>
@@ -40,5 +56,10 @@ function onSubmit() {
 
 .note {
   margin-top: 1rem;
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 </style>

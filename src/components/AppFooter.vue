@@ -7,7 +7,7 @@ const year = new Date().getFullYear()
 <template>
   <footer class="footer">
     <p>&copy; {{ year }} {{ site.name }}</p>
-    <p class="quiet">Members’ site. Sign-in will lock this down.</p>
+    <p class="quiet">Members’ site.</p>
   </footer>
 </template>
 
