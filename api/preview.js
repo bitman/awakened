@@ -1,0 +1,92 @@
+const PRIVATE_HOST = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.|::1|\[::1\])/i
+
+export function firstHttpUrl(text) {
+  const match = String(text ?? '').match(/https?:\/\/[^\s<>"']+/i)
+  if (!match) return undefined
+  return match[0].replace(/[),.;]+$/g, '')
+}
+
+function allowedUrl(raw) {
+  let parsed
+  try {
+    parsed = new URL(raw)
+  } catch {
+    return null
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+  if (PRIVATE_HOST.test(parsed.hostname)) return null
+  return parsed
+}
+
+function metaContent(html, property) {
+  const escaped = property.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const named = new RegExp(
+    `<meta[^>]+(?:property|name)=["']${escaped}["'][^>]*content=["']([^"']+)["']`,
+    'i',
+  )
+  const contentFirst = new RegExp(
+    `<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["']${escaped}["']`,
+    'i',
+  )
+  return (html.match(named) || html.match(contentFirst) || [])[1]
+}
+
+function decode(value) {
+  return value
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+}
+
+function absolute(base, maybe) {
+  try {
+    return new URL(maybe, base).toString()
+  } catch {
+    return maybe
+  }
+}
+
+export async function fetchPreview(rawUrl) {
+  const parsed = allowedUrl(rawUrl)
+  if (!parsed) return null
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 5000)
+
+  try {
+    const response = await fetch(parsed.toString(), {
+      signal: controller.signal,
+      redirect: 'follow',
+      headers: { 'user-agent': 'the-awakened.uk link preview' },
+    })
+    if (!response.ok) return { url: parsed.toString(), title: parsed.hostname, image: null }
+
+    const type = response.headers.get('content-type') ?? ''
+    if (type.startsWith('image/')) {
+      return { url: parsed.toString(), title: parsed.hostname, image: parsed.toString() }
+    }
+
+    const html = (await response.text()).slice(0, 200_000)
+    const image =
+      metaContent(html, 'og:image') ||
+      metaContent(html, 'og:image:url') ||
+      metaContent(html, 'twitter:image')
+    const title =
+      metaContent(html, 'og:title') ||
+      metaContent(html, 'twitter:title') ||
+      (html.match(/<title[^>]*>([^<]+)<\/title>/i) || [])[1] ||
+      parsed.hostname
+
+    return {
+      url: parsed.toString(),
+      title: decode(title).trim().slice(0, 180),
+      image: image ? absolute(parsed.toString(), decode(image).trim()) : null,
+    }
+  } catch {
+    return { url: parsed.toString(), title: parsed.hostname, image: null }
+  } finally {
+    clearTimeout(timer)
+  }
+}

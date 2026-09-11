@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { createGroupPost, deleteGroupPost, listGroupPosts, type GroupPost } from '@/lib/groupPosts'
+import { createGroupPost, deleteGroupPost, listGroupPosts, unfurlText, type GroupPost } from '@/lib/groupPosts'
 import { formatDateTime, isMissingTable } from '@/lib/dates'
+import { linkParts } from '@/lib/links'
 import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
@@ -19,7 +20,7 @@ async function load() {
     notice.value = ''
   } catch (error) {
     notice.value = isMissingTable(error as { message?: string })
-      ? 'Tables are not created yet. Run supabase/schema.sql in the Supabase SQL editor.'
+      ? 'Run supabase/previews.sql in the SQL editor if you just added link columns.'
       : error instanceof Error
         ? error.message
         : 'Could not load the group feed.'
@@ -31,7 +32,9 @@ async function load() {
 async function onSubmit() {
   pending.value = true
   try {
-    await createGroupPost(body.value.trim())
+    const text = body.value.trim()
+    const preview = await unfurlText(text)
+    await createGroupPost(text, preview)
     body.value = ''
     await load()
   } catch (error) {
@@ -81,7 +84,30 @@ onMounted(load)
         </span>
         <button v-if="session.isAdmin" class="remove" type="button" @click="onRemove(item.id)">Remove</button>
       </p>
-      <p>{{ item.body }}</p>
+      <div class="excerpt">
+        <a
+          v-if="item.linkImage"
+          class="thumb"
+          :href="item.linkUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img :src="item.linkImage" :alt="item.linkTitle || 'Link'" />
+        </a>
+        <div>
+          <p>
+            <template v-for="(part, index) in linkParts(item.body)" :key="index">
+              <a v-if="part.type === 'link'" :href="part.value" target="_blank" rel="noopener noreferrer">{{
+                part.value
+              }}</a>
+              <template v-else>{{ part.value }}</template>
+            </template>
+          </p>
+          <p v-if="item.linkTitle && item.linkUrl" class="link-title">
+            <a :href="item.linkUrl" target="_blank" rel="noopener noreferrer">{{ item.linkTitle }}</a>
+          </p>
+        </div>
+      </div>
     </article>
   </div>
 </template>
@@ -95,6 +121,37 @@ onMounted(load)
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.excerpt {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.excerpt p {
+  margin: 0;
+}
+
+.thumb {
+  flex: 0 0 4.5rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.link-title {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
 }
 
 .btn:disabled {

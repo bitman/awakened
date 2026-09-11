@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { fetchPreview, firstHttpUrl } from './preview.js'
 
 function asRecord(value) {
   if (value && typeof value === 'object' && !Array.isArray(value)) return value
@@ -134,6 +135,8 @@ export default async function handler(req, res) {
     let inserted = 0
 
     for (const message of messages) {
+      const link = firstHttpUrl(message.body)
+      const preview = link ? await fetchPreview(link) : null
       const { error } = await supabase.from('group_posts').insert({
         body: message.body,
         author_name: message.author ?? null,
@@ -142,6 +145,9 @@ export default async function handler(req, res) {
         published: true,
         posted_at: message.postedAt ?? new Date().toISOString(),
         author_id: null,
+        link_url: preview?.url ?? null,
+        link_title: preview?.title ?? null,
+        link_image: preview?.image ?? null,
       })
       if (!error) {
         inserted += 1
