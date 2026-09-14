@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { topics, type TopicSlug } from '@/content/site'
+import { onMounted, ref } from 'vue'
+import { listTopics, topicTitle, type Topic } from '@/lib/topics'
 
-defineProps<{
-  slugs: TopicSlug[]
+const props = defineProps<{
+  slugs: string[]
 }>()
+
+const catalog = ref<Topic[]>([])
+
+onMounted(async () => {
+  catalog.value = await listTopics()
+})
 </script>
 
 <template>
   <p class="topics">
-    <RouterLink v-for="slug in slugs" :key="slug" class="topic" :to="`/topics/${slug}`">
-      {{ topics.find((topic) => topic.slug === slug)?.title }}
+    <RouterLink v-for="slug in props.slugs" :key="slug" class="topic" :to="`/topics/${slug}`">
+      {{ topicTitle(catalog, slug) }}
     </RouterLink>
   </p>
 </template>

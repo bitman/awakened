@@ -9,11 +9,3 @@ export const site = {
   email: 'mailto:pokerlad@gmail.com',
   twitter: 'https://twitter.com/real_bitman',
 }
-
-export const topics = [
-  { slug: 'control', title: 'Control' },
-  { slug: 'health', title: 'Health' },
-  { slug: 'money', title: 'Money' },
-] as const
-
-export type TopicSlug = (typeof topics)[number]['slug']

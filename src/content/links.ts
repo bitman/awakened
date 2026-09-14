@@ -1,11 +1,9 @@
-import type { TopicSlug } from './site'
-
 export interface ExternalLink {
   slug: string
   title: string
   date: string
   url: string
-  topics: TopicSlug[]
+  topics: string[]
   note: string
 }
 
@@ -36,6 +34,6 @@ export const links: ExternalLink[] = [
   },
 ]
 
-export function linksByTopic(topic: TopicSlug) {
+export function linksByTopic(topic: string) {
   return links.filter((link) => link.topics.includes(topic))
 }

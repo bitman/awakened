@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase'
-import { topics, type TopicSlug } from '@/content/site'
 import { slugify } from '@/lib/dates'
 
 export interface Post {
@@ -8,7 +7,7 @@ export interface Post {
   title: string
   excerpt: string
   body: string
-  topics: TopicSlug[]
+  topics: string[]
   images: string[]
   date: string
 }
@@ -24,8 +23,6 @@ interface PostRow {
   published_at: string
 }
 
-const allowed = new Set<string>(topics.map((topic) => topic.slug))
-
 function mapPost(row: PostRow): Post {
   return {
     id: row.id,
@@ -33,7 +30,7 @@ function mapPost(row: PostRow): Post {
     title: row.title,
     excerpt: row.excerpt,
     body: row.body,
-    topics: (row.topics ?? []).filter((topic): topic is TopicSlug => allowed.has(topic)),
+    topics: row.topics ?? [],
     images: row.images ?? [],
     date: row.published_at,
   }
@@ -64,7 +61,7 @@ export async function createPost(input: {
   title: string
   body: string
   excerpt: string
-  topics: TopicSlug[]
+  topics: string[]
 }) {
   const base = slugify(input.title)
   let slug = base
@@ -86,5 +83,10 @@ export async function createPost(input: {
 
 export async function deletePost(id: string) {
   const { error } = await supabase.from('posts').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function setPostTopics(id: string, topics: string[]) {
+  const { error } = await supabase.from('posts').update({ topics }).eq('id', id)
   if (error) throw error
 }

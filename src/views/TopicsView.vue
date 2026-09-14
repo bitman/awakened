@@ -1,22 +1,47 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { topics, type TopicSlug } from '@/content/site'
 import { listPosts, type Post } from '@/lib/posts'
+import { createTopic, listTopics, type Topic } from '@/lib/topics'
 import { links, linksByTopic } from '@/content/links'
 import { formatDate } from '@/lib/dates'
+import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
+const session = useSessionStore()
 const posts = ref<Post[]>([])
+const catalog = ref<Topic[]>([])
+const newTitle = ref('')
+const notice = ref('')
+const pending = ref(false)
 
-const current = computed(() => topics.find((topic) => topic.slug === route.params.slug))
-const slug = computed(() => current.value?.slug as TopicSlug | undefined)
+const current = computed(() => catalog.value.find((topic) => topic.slug === route.params.slug))
+const slug = computed(() => current.value?.slug)
 const topicPosts = computed(() =>
-  slug.value ? posts.value.filter((post) => post.topics.includes(slug.value as TopicSlug)) : posts.value,
+  slug.value ? posts.value.filter((post) => post.topics.includes(slug.value as string)) : posts.value,
 )
 const topicLinks = computed(() => (slug.value ? linksByTopic(slug.value) : links))
 
+async function loadTopics() {
+  catalog.value = await listTopics()
+}
+
+async function onAddTopic() {
+  pending.value = true
+  notice.value = ''
+  try {
+    await createTopic(newTitle.value)
+    newTitle.value = ''
+    await loadTopics()
+  } catch (error) {
+    notice.value = error instanceof Error ? error.message : 'Could not add topic.'
+  } finally {
+    pending.value = false
+  }
+}
+
 onMounted(async () => {
+  await loadTopics()
   try {
     posts.value = await listPosts()
   } catch {
@@ -32,7 +57,7 @@ onMounted(async () => {
     <p class="filters">
       <RouterLink class="topic" :class="{ on: !current }" to="/topics">All</RouterLink>
       <RouterLink
-        v-for="topic in topics"
+        v-for="topic in catalog"
         :key="topic.slug"
         class="topic"
         :class="{ on: current?.slug === topic.slug }"
@@ -41,6 +66,15 @@ onMounted(async () => {
         {{ topic.title }}
       </RouterLink>
     </p>
+
+    <form v-if="session.isAdmin" class="add" @submit.prevent="onAddTopic">
+      <div class="field">
+        <label for="new-topic">New topic</label>
+        <input id="new-topic" v-model="newTitle" required maxlength="40" placeholder="e.g. Food" />
+      </div>
+      <button class="btn" type="submit" :disabled="pending">{{ pending ? 'Adding…' : 'Add topic' }}</button>
+      <p v-if="notice" class="note">{{ notice }}</p>
+    </form>
 
     <h2 class="section">Posts</h2>
     <p v-if="topicPosts.length === 0" class="empty">No posts in this topic yet.</p>
@@ -66,12 +100,17 @@ onMounted(async () => {
 
 <style scoped>
 .filters {
-  margin: 0 0 1.75rem;
+  margin: 0 0 1.25rem;
 }
 
 .topic.on {
   background: var(--accent);
   color: #fff;
+}
+
+.add {
+  margin: 0 0 1.75rem;
+  max-width: 22rem;
 }
 
 .section {
@@ -80,5 +119,10 @@ onMounted(async () => {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 </style>

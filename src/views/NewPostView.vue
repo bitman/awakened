@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { topics, type TopicSlug } from '@/content/site'
 import { createPost } from '@/lib/posts'
+import { listTopics, type Topic } from '@/lib/topics'
 
 const router = useRouter()
 const title = ref('')
 const body = ref('')
 const excerpt = ref('')
-const selected = ref<TopicSlug[]>([])
+const selected = ref<string[]>([])
+const catalog = ref<Topic[]>([])
 const notice = ref('')
 const pending = ref(false)
 
-function toggleTopic(slug: TopicSlug, checked: boolean) {
+function toggleTopic(slug: string, checked: boolean) {
   if (checked) {
     selected.value = [...selected.value, slug]
     return
@@ -38,6 +39,10 @@ async function onSubmit() {
     pending.value = false
   }
 }
+
+onMounted(async () => {
+  catalog.value = await listTopics()
+})
 </script>
 
 <template>
@@ -61,7 +66,8 @@ async function onSubmit() {
       </div>
       <fieldset class="field">
         <legend>Topics</legend>
-        <label v-for="topic in topics" :key="topic.slug" class="check">
+        <p v-if="catalog.length === 0" class="muted">No topics yet. Admins can add them on the Topics page.</p>
+        <label v-for="topic in catalog" :key="topic.slug" class="check">
           <input
             type="checkbox"
             :checked="selected.includes(topic.slug)"

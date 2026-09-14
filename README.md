@@ -36,6 +36,7 @@ The Vue app uses the **anon** key. It never uses the `postgres://…` database U
 7. Roles: paste `supabase/roles.sql` → Run. Then run the `update … role = 'admin'` at the bottom with your sign-in email. After that, admins add users and switch roles on the **Members** page.
 8. WhatsApp ingest: paste `supabase/whatsapp.sql` → Run. On Vercel add **Secret** env vars (no `VITE_` prefix): `SUPABASE_SERVICE_ROLE_KEY` (service_role key), `WHATSAPP_INGEST_SECRET` (a long random string), `WHATSAPP_VERIFY_TOKEN` (for Meta later). Redeploy. POST JSON to `/api/whatsapp` with `Authorization: Bearer <WHATSAPP_INGEST_SECRET>`.
 9. Link thumbnails: paste `supabase/previews.sql` → Run. Group excerpts that contain a URL fetch a small preview image on save.
+10. Topics: paste `supabase/topics.sql` → Run. Admins add topics on the Topics page and tick them on a post.
 
 Do not copy keys from WeCanGo.
 
