@@ -102,7 +102,7 @@ onMounted(load)
     <p class="lede">WhatsApp</p>
     <h1>Group</h1>
     <p class="note">
-      Messages from the WhatsApp group land here. For now we show everything; later we can pick which ones stay.
+      Paste excerpts from the WhatsApp group here. Automatic import is not wired yet.
     </p>
 
     <form class="compose" @submit.prevent="onSubmit">
