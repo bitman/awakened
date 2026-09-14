@@ -62,6 +62,25 @@ export async function deleteGroupPost(id: string) {
   if (error) throw error
 }
 
+export async function updateGroupPost(
+  id: string,
+  input: { body: string; linkTitle?: string; preview?: LinkPreview | null },
+) {
+  const title = input.linkTitle?.trim() || input.preview?.title?.trim() || null
+  const patch = {
+    body: input.body,
+    link_title: title,
+    ...(input.preview
+      ? {
+          link_url: input.preview.url,
+          link_image: input.preview.image ?? null,
+        }
+      : {}),
+  }
+  const { error } = await supabase.from('group_posts').update(patch).eq('id', id)
+  if (error) throw error
+}
+
 export async function unfurlText(text: string) {
   const { data: sessionData } = await supabase.auth.getSession()
   const token = sessionData.session?.access_token

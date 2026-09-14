@@ -31,13 +31,39 @@ function metaContent(html, property) {
   return (html.match(named) || html.match(contentFirst) || [])[1]
 }
 
+const NAMED = {
+  amp: '&',
+  quot: '"',
+  apos: "'",
+  lt: '<',
+  gt: '>',
+  nbsp: ' ',
+  mdash: '—',
+  ndash: '–',
+  middot: '·',
+  hellip: '…',
+  rsquo: '’',
+  lsquo: '‘',
+  rdquo: '”',
+  ldquo: '“',
+}
+
 function decode(value) {
   return value
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, digits) => String.fromCodePoint(Number(digits)))
+    .replace(/&([a-z]+);/gi, (match, name) => NAMED[name.toLowerCase()] ?? match)
+}
+
+function tidyTitle(raw) {
+  let title = decode(raw).replace(/\s+/g, ' ').trim()
+  title = title.replace(/^[\d.,]+\s*[KMB]?\s*views\b[^|]{0,60}\|\s*/i, '')
+  if (title.length > 140) {
+    const cut = title.slice(0, 140)
+    const at = cut.lastIndexOf(' ')
+    title = `${(at > 80 ? cut.slice(0, at) : cut).trim()}…`
+  }
+  return title
 }
 
 function absolute(base, maybe) {
@@ -81,7 +107,7 @@ export async function fetchPreview(rawUrl) {
 
     return {
       url: parsed.toString(),
-      title: decode(title).trim().slice(0, 180),
+      title: tidyTitle(title),
       image: image ? absolute(parsed.toString(), decode(image).trim()) : null,
     }
   } catch {
