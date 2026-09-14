@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { site } from '@/content/site'
 import { useSessionStore } from '@/stores/session'
@@ -7,14 +8,18 @@ const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
 
-const links = [
-  { to: '/', label: 'Home' },
-  { to: '/about', label: 'About' },
-  { to: '/posts', label: 'Posts' },
-  { to: '/group', label: 'Group' },
-  { to: '/links', label: 'Links' },
-  { to: '/topics', label: 'Topics' },
-]
+const links = computed(() => {
+  const items = [
+    { to: '/', label: 'Home' },
+    { to: '/about', label: 'About' },
+    { to: '/posts', label: 'Posts' },
+    { to: '/group', label: 'Group' },
+    { to: '/links', label: 'Links' },
+    { to: '/topics', label: 'Topics' },
+  ]
+  if (session.isAdmin) items.push({ to: '/members', label: 'Members' })
+  return items
+})
 
 async function onSignOut() {
   await session.signOut()

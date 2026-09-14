@@ -17,6 +17,12 @@ const router = createRouter({
     { path: '/links', name: 'links', component: () => import('../views/LinksView.vue') },
     { path: '/topics/:slug?', name: 'topics', component: () => import('../views/TopicsView.vue') },
     {
+      path: '/members',
+      name: 'members',
+      component: () => import('../views/MembersView.vue'),
+      meta: { admin: true },
+    },
+    {
       path: '/sign-in',
       name: 'sign-in',
       component: () => import('../views/LoginView.vue'),
@@ -37,6 +43,8 @@ router.beforeEach(async (to) => {
   if (!session.isSignedIn) {
     return { name: 'sign-in', query: { redirect: to.fullPath } }
   }
+
+  if (to.meta.admin && !session.isAdmin) return { name: 'home' }
 
   return true
 })

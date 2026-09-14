@@ -193,7 +193,8 @@ h1 {
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.field select {
   padding: 0.65rem 0.75rem;
   border: 1px solid var(--line);
   border-radius: 8px;
